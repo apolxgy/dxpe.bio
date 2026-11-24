@@ -5,7 +5,7 @@ export const LINKS = {
 };
 
 export const MUSIC =
-  "https://file.garden/aN0Uo2YmaWI-OmAY/EsDeeKid%20%26%20Rico%20Ace%20-%20Phantom%20(Lyrics)%20%5BGlnYAkcHdGo%5D%20(mp3cut.net).mp3";
+  "https://file.garden/aN0Uo2YmaWI-OmAY/HARAMBE%20(Offical%20Music%20Video)%20-%20Buddahbeads%20(128k)%20(mp3cut.net).mp3";
 
 export const FALLBACK_AVATAR =
   "data:image/svg+xml," +
