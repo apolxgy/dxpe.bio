@@ -8,18 +8,23 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // which profile page is counting: /yx, /wayne, ... (defaults to wayne)
+  const raw = req.query && req.query.page ? String(req.query.page) : "wayne";
+  const page = /^[a-z0-9-]{1,24}$/.test(raw) ? raw : "wayne";
+
   const base = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!base || !token) {
-    res.status(200).json({ views: null, counted: false, configured: false });
+    res.status(200).json({ views: null, counted: false, configured: false, page });
     return;
   }
 
-  const KEY = "dxpe:wayne:views";
+  const KEY = `dxpe:${page}:views`;
+  const cookie = `${page}_seen`;
   const cookies = req.headers.cookie || "";
-  const seen = /(?:^|;\s*)wayne_seen=/.test(cookies);
-  const peek = seen || req.query.mode === "peek";
+  const seen = new RegExp(`(?:^|;\\s*)${cookie}=`).test(cookies);
+  const peek = seen || (req.query && req.query.mode === "peek");
 
   const call = async (path) => {
     const r = await fetch(`${base}/${path}/${encodeURIComponent(KEY)}`, {
@@ -45,13 +50,24 @@ module.exports = async function handler(req, res) {
         counted = true;
         res.setHeader(
           "Set-Cookie",
-          "wayne_seen=1; Max-Age=21600; Path=/; SameSite=Lax; Secure",
+          `${cookie}=1; Max-Age=21600; Path=/; SameSite=Lax; Secure`,
         );
       }
     }
 
-    res.status(200).json({ views: Number.isFinite(views) ? views : 0, counted, configured: true });
+    res.status(200).json({
+      views: Number.isFinite(views) ? views : 0,
+      counted,
+      configured: true,
+      page,
+    });
   } catch {
-    res.status(200).json({ views: null, counted: false, configured: true, error: "upstream" });
+    res.status(200).json({
+      views: null,
+      counted: false,
+      configured: true,
+      page,
+      error: "upstream",
+    });
   }
 };
